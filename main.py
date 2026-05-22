@@ -34,7 +34,22 @@ logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO").upper())
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 
 
+def get_lan_ip():
+    import socket
+
+    try:
+        # 建立一個 UDP 套接字，不一定要連線成功
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return "127.0.0.1"
+
+
 class MainWindow(MSFluentWindow):
+
     def __init__(self):
         super().__init__()
         self.gpu_manager = GPUManager()
@@ -412,6 +427,7 @@ class MainWindow(MSFluentWindow):
 
         target_port = section.port_input.text()
         proxy_port = section.proxy_port_input.text()
+        lan_ip = get_lan_ip()
         
         proxy_script = os.path.join(CURRENT_DIR, "src", "utils", "proxy.py")
         
@@ -420,9 +436,11 @@ class MainWindow(MSFluentWindow):
         if not os.path.exists(venv_python):
             venv_python = "python"
             
-        command = [venv_python, proxy_script, "--target-port", target_port, "--proxy-port", proxy_port]
+        command = [venv_python, proxy_script, "--target-port", target_port, "--proxy-port", proxy_port, "--lan-ip", lan_ip]
         
         logging.info(f"啟動繁體轉換代理: {proxy_port} -> {target_port}")
+        logging.info(f"外部連線網址: http://{lan_ip}:{proxy_port}")
+        logging.info(f"API 線上文件: http://{lan_ip}:{proxy_port}/docs")
         
         # 始終在背景啟動代理
         if sys.platform == "win32":
@@ -535,10 +553,11 @@ if __name__ == "__main__":
         if config.get("use_proxy", False):
             target_port = config.get("port", "8080")
             proxy_port = config.get("proxy_port", "8081")
+            lan_ip = get_lan_ip()
             proxy_script = os.path.join(CURRENT_DIR, "src", "utils", "proxy.py")
             
-            print(f"Starting Traditional Chinese Proxy: {proxy_port} -> {target_port}")
-            proxy_cmd = [sys.executable, proxy_script, "--target-port", str(target_port), "--proxy-port", str(proxy_port)]
+            print(f"Starting Traditional Chinese Proxy: {proxy_port} -> {target_port} (LAN IP: {lan_ip})")
+            proxy_cmd = [sys.executable, proxy_script, "--target-port", str(target_port), "--proxy-port", str(proxy_port), "--lan-ip", lan_ip]
             
             if sys.platform == "win32":
                 subprocess.Popen(proxy_cmd, creationflags=subprocess.CREATE_NO_WINDOW)

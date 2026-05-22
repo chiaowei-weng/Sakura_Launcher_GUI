@@ -26,9 +26,14 @@ function Show-Help {
 
 switch ($Action) {
     "start" {
+        $ip = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -notlike "*Loopback*" -and $_.IPAddress -notlike "169.254.*" } | Select-Object -First 1).IPAddress
+        if (-not $ip) { $ip = "127.0.0.1" }
         Write-Host "🚀 正在背景啟動 Sakura 翻譯服務與繁體代理 (預設集: $Preset)..." -ForegroundColor Cyan
         & $VENV_PYTHON main.py --run-preset $Preset
-        Write-Host "💡 請將翻譯軟體連線至埠口 8081 以取得繁體中文輸出。" -ForegroundColor Magenta
+        Write-Host "`n✨ 啟動成功！" -ForegroundColor Green
+        Write-Host "🔗 外部存取位址: http://$($ip):8081" -ForegroundColor Yellow
+        Write-Host "📖 API 線上文件: http://$($ip):8081/docs" -ForegroundColor Cyan
+        Write-Host "💡 請將翻譯軟體連線至上述位址以取得繁體中文輸出。" -ForegroundColor Magenta
     }
     "stop" {
         Write-Host "🛑 正在停止 Sakura 翻譯服務與代理..." -ForegroundColor Yellow
