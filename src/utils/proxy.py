@@ -81,9 +81,9 @@ class TranslationProxy:
         app.router.add_route('*', '/{tail:.*}', self.proxy_handler)
         runner = web.AppRunner(app)
         await runner.setup()
-        site = web.TCPSite(runner, '127.0.0.1', self.proxy_port)
+        site = web.TCPSite(runner, '0.0.0.0', self.proxy_port)
         await site.start()
-        logging.info(f"Proxy started: http://127.0.0.1:{self.proxy_port} -> {self.target_url}")
+        logging.info(f"Proxy started: http://0.0.0.0:{self.proxy_port} -> {self.target_url}")
         
         # 保持運行
         while True:

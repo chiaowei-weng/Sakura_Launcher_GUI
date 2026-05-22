@@ -120,23 +120,18 @@ class RunServerSection(QFrame):
         self.background_check.stateChanged.connect(
             lambda: SETTING.set_value("run_in_background", self.background_check.isChecked())
         )
-        self.proxy_check = UiCheckBox("繁體轉換代理", SETTING.use_proxy)
-        self.proxy_check.stateChanged.connect(
-            lambda: SETTING.set_value("use_proxy", self.proxy_check.isChecked())
-        )
 
         layout_extra_options = UiRow(
             self.flash_attention_check,
             self.no_mmap_check,
             self.background_check,
-            self.proxy_check,
             None,
         )
         layout_extra_options.setContentsMargins(0, 0, 0, 0)  # 設定內部邊距
 
         self.llamacpp_override = UiLineEdit("覆蓋預設 llamacpp 路徑（可選）", "")
 
-        self.proxy_port_input = UiLineEdit("代理埠口 (預設 8081)", SETTING.proxy_port)
+        self.proxy_port_input = UiLineEdit("繁體代理埠口 (預設 8081)", SETTING.proxy_port)
         self.proxy_port_input.textChanged.connect(
             lambda text: SETTING.set_value("proxy_port", text.strip())
         )
@@ -414,7 +409,7 @@ class RunServerSection(QFrame):
                 "flash_attention": self.flash_attention_check.isChecked(),
                 "no_mmap": self.no_mmap_check.isChecked(),
                 "run_in_background": self.background_check.isChecked(),
-                "use_proxy": self.proxy_check.isChecked(),
+                "use_proxy": True,
                 "proxy_port": self.proxy_port_input.text(),
                 "gpu": selected_gpu,  # 儲存完整的GPU顯示名稱
                 "model_path": self.model_path.currentText(),
@@ -470,7 +465,6 @@ class RunServerSection(QFrame):
                 self.ntg_input.setText(config.get("ntg", "384"))
                 self.npl_input.setText(config.get("npl", "1,2,4,8,16"))
                 self.no_mmap_check.setChecked(config.get("no_mmap", True))
-                self.proxy_check.setChecked(config.get("use_proxy", SETTING.use_proxy))
                 self.proxy_port_input.setText(config.get("proxy_port", SETTING.proxy_port))
 
                 # 加載GPU選擇，支援新舊格式

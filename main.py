@@ -407,7 +407,7 @@ class MainWindow(MSFluentWindow):
 
     def start_proxy(self):
         section = self.run_server_section
-        if not section.proxy_check.isChecked():
+        if not SETTING.use_proxy:
             return
 
         target_port = section.port_input.text()
