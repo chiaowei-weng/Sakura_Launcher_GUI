@@ -35,18 +35,33 @@ class DocManager:
   "stream": false
 }""",
             response_example="""{
-  "id": "chatcmpl-...",
-  "object": "chat.completion",
-  "created": 1234567890,
-  "model": "sakura",
   "choices": [
     {
-      "index": 0,
       "message": {
-        "role": "assistant",
         "content": "翻譯：你好"
-      },
-      "finish_reason": "stop"
+      }
+    }
+  ]
+}"""
+        )
+
+        self.register_endpoint(
+            path="/v1/chat/completions (多行範例)",
+            method="POST",
+            description="針對長篇輕小說段落，支援多行換行符號 `\\n`。建議在 messages 中使用正確的格式引導。",
+            payload_example="""{
+  "model": "sakura",
+  "messages": [
+    {"role": "system", "content": "你是一個輕小說翻譯模型。"},
+    {"role": "user", "content": "將下面的日文文本翻譯成中文：\\n\\n「お兄ちゃん、起きて！」\\n\\n妹の声が響く。"}
+  ]
+}""",
+            response_example="""{
+  "choices": [
+    {
+      "message": {
+        "content": "「哥哥，起床啦！」\\n\\n妹妹的聲音響起。"
+      }
     }
   ]
 }"""
