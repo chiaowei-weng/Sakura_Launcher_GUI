@@ -59,7 +59,7 @@ def UiTableLabel(text):
 
 
 def UiDownloadButton(on_click):
-    download_button = TransparentPushButton(FIF.DOWNLOAD, "下载")
+    download_button = TransparentPushButton(FIF.DOWNLOAD, "下載")
     download_button.clicked.connect(on_click)
     return download_button
 
@@ -85,7 +85,7 @@ class LoadDataThread(QThread):
                 LLAMACPP_LIST.update_llamacpp_list(data_json)
                 break
             except Exception as e:
-                logging.warning(f"获取远程数据失败: {link} {e}")
+                logging.warning(f"獲取遠程數據失敗: {link} {e}")
 
 
 class DownloadTaskState(Enum):
@@ -115,7 +115,7 @@ class DownloadThread(QThread):
 
     def run(self):
         try:
-            logging.info(f"开始下载: {self.url} => {self.filename}")
+            logging.info(f"開始下載: {self.url} => {self.filename}")
             response = requests.get(self.url, stream=True)
             response.raise_for_status()
 
@@ -132,49 +132,49 @@ class DownloadThread(QThread):
                         progress = int((downloaded_size / total_size) * 100)
                         self.sig_progress.emit(progress)
 
-            logging.info(f"下载完成: {self.filename}")
+            logging.info(f"下載完成: {self.filename}")
 
             if not self._is_finished:
                 self._is_finished = True
                 self.sig_success.emit()
         except requests.RequestException as e:
-            error_msg = f"下载出错: {str(e)}"
+            error_msg = f"下載出錯: {str(e)}"
             logging.info(error_msg)
             self.sig_error.emit(error_msg)
         except IOError as e:
-            error_msg = f"文件写入错误: {str(e)}"
+            error_msg = f"文件寫入錯誤: {str(e)}"
             logging.info(error_msg)
             self.sig_error.emit(error_msg)
         except Exception as e:
-            error_msg = f"未知错误: {str(e)}"
+            error_msg = f"未知錯誤: {str(e)}"
             logging.info(error_msg)
             self.sig_error.emit(error_msg)
 
     def safe_disconnect(self):
-        logging.info("正在断开下载线程的所有信号连接")
+        logging.info("正在斷開下載線程的所有信號連接")
         try:
             self.sig_progress.disconnect()
-            logging.info("断开 progress 信号")
+            logging.info("斷開 progress 信號")
         except TypeError:
             pass
         try:
             self.sig_success.disconnect()
-            logging.info("断开 finished 信号")
+            logging.info("斷開 finished 信號")
         except TypeError:
             pass
         try:
             self.sig_error.disconnect()
-            logging.info("断开 error 信号")
+            logging.info("斷開 error 信號")
         except TypeError:
             pass
-        logging.info("下载线程的所有信号已断开")
+        logging.info("下載線程的所有信號已斷開")
 
     def stop(self):
-        logging.info("正在停止下载线程")
+        logging.info("正在停止下載線程")
         self.terminate()
         self.wait()
         self._is_finished = True
-        logging.info("下载线程已停止")
+        logging.info("下載線程已停止")
 
 
 class DownloadSection(QFrame):
@@ -191,9 +191,9 @@ class DownloadSection(QFrame):
     def init_ui(self):
         self.setLayout(
             UiStackedWidget(
-                ("Sakura模型下载", self._create_sakura_download_section()),
-                ("llama.cpp下载", self._create_llamacpp_download_section()),
-                ("下载进度", self._create_download_progress_section()),
+                ("Sakura模型下載", self._create_sakura_download_section()),
+                ("llama.cpp下載", self._create_llamacpp_download_section()),
+                ("下載進度", self._create_download_progress_section()),
             ),
         )
         LoadDataThread(self).start()
@@ -219,18 +219,18 @@ class DownloadSection(QFrame):
             self.sakura_download_src = text
 
         comboBox = UiRow(
-            QLabel("下载源"),
+            QLabel("下載源"),
             None,
             UiComboBox(SAKURA_LIST.DOWNLOAD_SRC, on_src_change),
         )
 
-        self.sakura_table = UiTable(["名称", "大小", "操作"])
+        self.sakura_table = UiTable(["名稱", "大小", "操作"])
         SAKURA_LIST.changed.connect(self.refresh_sakura_table)
 
         description = UiDescription(
             """
-        <p>您可以在这里下载不同版本的模型，模型会保存到启动器所在的目录。如果启动器无法下载，您也可以手动从<a href="https://huggingface.co/SakuraLLM/">Hugging Face镜像站</a>下载模型，将下载的gguf文件放到启动器所在文件夹下即可。</p>
-        <p>翻译Galgame推荐使用7B模型，12G以下显存可用。翻译小说推荐使用14B模型，需要12G及以上显存。</p>
+        <p>您可以在這裡下載不同版本的模型，模型會儲存到啟動器所在的目錄。如果啟動器無法下載，您也可以手動從<a href="https://huggingface.co/SakuraLLM/">Hugging Face鏡像站</a>下載模型，將下載的gguf文件放到啟動器所在文件夾下即可。</p>
+        <p>翻譯Galgame推薦使用7B模型，12G以下顯存可用。翻譯小說推薦使用14B模型，需要12G及以上顯存。</p>
         """
         )
 
@@ -259,7 +259,7 @@ class DownloadSection(QFrame):
             table.setCellWidget(row, 2, create_button(llamacpp=llamacpp))
 
     def _create_llamacpp_download_section(self):
-        self.llamacpp_table = UiTable(["版本", "适合显卡", "下载"])
+        self.llamacpp_table = UiTable(["版本", "適合顯卡", "下載"])
         self.refresh_llamacpp_table()
 
         LLAMACPP_LIST.changed.connect(self.refresh_llamacpp_table)
@@ -268,7 +268,7 @@ class DownloadSection(QFrame):
             self.llamacpp_download_src = text
 
         select_download_src = UiRow(
-            QLabel("下载源"),
+            QLabel("下載源"),
             None,
             UiComboBox(LLAMACPP_LIST.DOWNLOAD_SRC, on_src_change),
         )
@@ -276,20 +276,20 @@ class DownloadSection(QFrame):
         self.label_current_llamacpp_version = QLabel()
         self._update_current_llamacpp_version()
         current_version_hint = UiRow(
-            QLabel("当前版本"),
+            QLabel("當前版本"),
             (self.label_current_llamacpp_version, 0),
         )
 
         description = UiDescription(
             """
         <p>
-        下载的llama.cpp会解压到启动器所在的目录，如果存在旧版本，会自动覆盖。你也可以手动从<a href="https://github.com/ggerganov/llama.cpp/releases">GitHub发布页面</a>下载发行版。
-        intel ARC用户请参考<a href="https://github.com/intel-analytics/ipex-llm/blob/main/docs/mddocs/Quickstart/llama_cpp_quickstart.md">这篇文档</a>来手动安装，在启动器指定软链接路径<b>可能</b>可以使用。
-        Vulkan版本现在还不支持IQ系列的量化。
+        下載的llama.cpp會解壓到啟動器所在的目錄，如果存在舊版本，會自動覆蓋。你也可以手動從<a href="https://github.com/ggerganov/llama.cpp/releases">GitHub發布頁面</a>下載發行版。
+        intel ARC用戶請參考<a href="https://github.com/intel-analytics/ipex-llm/blob/main/docs/mddocs/Quickstart/llama_cpp_quickstart.md">這篇文檔</a>來手動安裝，在啟動器指定軟連結路徑<b>可能</b>可以使用。
+        Vulkan版本現在還不支援IQ系列的量化。
         </p>
-        <p><b>HIP支持的AMD大多数独显型号</b></p>
+        <p><b>HIP支援的AMD大多數獨顯型號</b></p>
         <ul>
-            <li>RX 7900 / 7800 / 7700 / 6900 / 6800 / 6700系列显卡</li>
+            <li>RX 7900 / 7800 / 7700 / 6900 / 6800 / 6700系列顯卡</li>
         </ul>
         """
         )
@@ -311,7 +311,7 @@ class DownloadSection(QFrame):
         for task in self.download_tasks:
             if task.state == DownloadTaskState.RUNNING and task.name == new_task.name:
                 InfoBar.warning(
-                    title=f"{new_task.filename}已在下载中",
+                    title=f"{new_task.filename}已在下載中",
                     content="",
                     parent=self,
                 )
@@ -331,9 +331,9 @@ class DownloadSection(QFrame):
 
         def on_error(error_message):
             new_task.state = DownloadTaskState.ERROR
-            logging.error(f"下载失败 {error_message}")
-            QApplication.processEvents()  # 确保UI更新
-            UiInfoBarError(self, f"{new_task.name}下载失败", content=f"{error_message}")
+            logging.error(f"下載失敗 {error_message}")
+            QApplication.processEvents()  # 確保UI更新
+            UiInfoBarError(self, f"{new_task.name}下載失敗", content=f"{error_message}")
 
         thread = DownloadThread(new_task.url, new_task.filename)
         thread.sig_progress.connect(progress_bar.setValue)
@@ -343,15 +343,15 @@ class DownloadSection(QFrame):
 
         self.download_threads.append(thread)
 
-        logging.info(f"开始下载: URL={new_task.url}, 文件名={new_task.filename}")
-        UiInfoBarSuccess(self, f"{new_task.name}开始下载，请在下载进度页面查看进度")
+        logging.info(f"開始下載: URL={new_task.url}, 文件名={new_task.filename}")
+        UiInfoBarSuccess(self, f"{new_task.name}開始下載，請在下載進度頁面查看進度")
 
     def _update_current_llamacpp_version(self):
         version = get_llamacpp_version(os.path.join(CURRENT_DIR, "llama"))
         if version:
             self.label_current_llamacpp_version.setText(f"b{version}")
         else:
-            self.label_current_llamacpp_version.setText("未检测到")
+            self.label_current_llamacpp_version.setText("未檢測到")
 
     def start_download_sakura(self, sakura: Sakura):
         src = self.sakura_download_src
@@ -365,11 +365,11 @@ class DownloadSection(QFrame):
             file_path = os.path.join(CURRENT_DIR, task.filename)
             if sakura.check_sha256(file_path):
                 task.state = DownloadTaskState.SUCCESS
-                UiInfoBarSuccess(self, f"{task.name}下载成功")
+                UiInfoBarSuccess(self, f"{task.name}下載成功")
             else:
                 task.state = DownloadTaskState.ERROR
-                UiInfoBarError(self, f"{task.name}校验失败")
-                os.remove(file_path)  # 删除校验失败的文件
+                UiInfoBarError(self, f"{task.name}校驗失敗")
+                os.remove(file_path)  # 刪除校驗失敗的文件
 
         self._start_download_task(task, on_finish=on_download_sakura_finish)
 
@@ -387,12 +387,12 @@ class DownloadSection(QFrame):
             try:
                 task.state = DownloadTaskState.SUCCESS
                 unzip_llamacpp(CURRENT_DIR, task.filename)
-                UiInfoBarSuccess(self, f"{task.name}下载成功")
+                UiInfoBarSuccess(self, f"{task.name}下載成功")
             except Exception as e:
                 task.state = DownloadTaskState.ERROR
-                UiInfoBarError(self, f"{task.name}解压失败", content=str(e))
+                UiInfoBarError(self, f"{task.name}解壓失敗", content=str(e))
             finally:
-                # 无论解压是否成功，都删除原始zip文件
+                # 無論解壓是否成功，都刪除原始zip文件
                 if os.path.exists(file_path):
                     os.remove(file_path)
 
@@ -411,13 +411,13 @@ class DownloadSection(QFrame):
             try:
                 task.state = DownloadTaskState.SUCCESS
                 unzip_llamacpp(CURRENT_DIR, task.filename)
-                UiInfoBarSuccess(self, f"{task.name}下载成功")
+                UiInfoBarSuccess(self, f"{task.name}下載成功")
                 self._update_current_llamacpp_version()
             except Exception as e:
                 task.state = DownloadTaskState.ERROR
-                UiInfoBarError(self, f"{task.name}解压失败", content=str(e))
+                UiInfoBarError(self, f"{task.name}解壓失敗", content=str(e))
             finally:
-                # 无论解压是否成功，都删除原始zip文件
+                # 無論解壓是否成功，都刪除原始zip文件
                 if os.path.exists(file_path):
                     os.remove(file_path)
 
@@ -433,13 +433,13 @@ class DownloadSection(QFrame):
             url = f"https://{GHPROXY_URL}/" + url
 
         task = DownloadTask(
-            name="Sakura启动器",
+            name="Sakura啟動器",
             url=url,
             filename=filename,
         )
 
         def on_finish():
             task.state = DownloadTaskState.SUCCESS
-            UiInfoBarSuccess(self, f"{task.name}下载成功")
+            UiInfoBarSuccess(self, f"{task.name}下載成功")
 
         self._start_download_task(task, on_finish=on_finish)

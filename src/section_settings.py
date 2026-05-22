@@ -37,18 +37,18 @@ class CheckUpdateThread(QThread):
             if version:
                 self.sig_version.emit(version)
             else:
-                raise RuntimeError("无法获取最新版本信息")
+                raise RuntimeError("無法獲取最新版本資訊")
         except Exception as e:
-            logging.error(f"获取最新启动器版本时出错: {str(e)}")
+            logging.error(f"獲取最新啟動器版本時出錯: {str(e)}")
 
 
 class ConfigEditor(TableWidget):
-    LONG_PRESS_TIME = 500  # 设置长按延迟时间（毫秒）
+    LONG_PRESS_TIME = 500  # 設定長按延遲時間（毫秒）
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setColumnCount(4)
-        self.setHorizontalHeaderLabels(["配置名称", "上移", "下移", "删除"])
+        self.setHorizontalHeaderLabels(["配置名稱", "上移", "下移", "刪除"])
         self.verticalHeader().hide()
         self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
@@ -78,7 +78,7 @@ class ConfigEditor(TableWidget):
             lambda: self.start_timer(button, row, self.move_up, self.move_to_top)
         )
         button.released.connect(lambda: self.stop_timer(button))
-        button.setToolTip("向上移动配置，长按可快速移动到顶部")
+        button.setToolTip("向上移動配置，長按可快速移動到頂部")
         return button
 
     def create_move_down_button(self, row):
@@ -87,11 +87,11 @@ class ConfigEditor(TableWidget):
             lambda: self.start_timer(button, row, self.move_down, self.move_to_bottom)
         )
         button.released.connect(lambda: self.stop_timer(button))
-        button.setToolTip("向下移动配置，长按可快速移动到底部")
+        button.setToolTip("向下移動配置，長按可快速移動到底部")
         return button
 
     def create_delete_button(self, row):
-        button = TransparentPushButton(FIF.DELETE, "删除")
+        button = TransparentPushButton(FIF.DELETE, "刪除")
         button.clicked.connect(lambda: self.delete_row(row))
         return button
 
@@ -100,7 +100,7 @@ class ConfigEditor(TableWidget):
         self.click_timer.timeout.connect(
             lambda: self.perform_long_press_action(row, long_press_func)
         )
-        self.click_timer.start(self.LONG_PRESS_TIME)  # 设置长按延迟
+        self.click_timer.start(self.LONG_PRESS_TIME)  # 設定長按延遲
         button.click_action = lambda: move_func(row)
 
     def stop_timer(self, button):
@@ -174,9 +174,9 @@ class SettingsSection(QFrame):
     def _init_ui(self):
         self.setLayout(
             UiStackedWidget(
-                ("设置", self._create_setting_section()),
-                ("编辑预设", self._create_config_editor_section()),
-                ("日志输出", self._create_log_section()),
+                ("設定", self._create_setting_section()),
+                ("編輯預設", self._create_config_editor_section()),
+                ("日誌輸出", self._create_log_section()),
             ),
         )
 
@@ -188,42 +188,42 @@ class SettingsSection(QFrame):
         )
 
         remember_window_state = UiCheckBox(
-            "记住窗口位置和大小", SETTING.remember_window_state
+            "記住窗口位置和大小", SETTING.remember_window_state
         )
         remember_window_state.toggled.connect(
             lambda checked: SETTING.set_value("remember_window_state", checked)
         )
         remember_advanced_state = UiCheckBox(
-            "记住高级设置状态", SETTING.remember_advanced_state
+            "記住高級設定狀態", SETTING.remember_advanced_state
         )
         remember_advanced_state.toggled.connect(
             lambda checked: SETTING.set_value("remember_advanced_state", checked)
         )
         no_gpu_ability_check = UiCheckBox(
-            "关闭 GPU 能力检测", SETTING.no_gpu_ability_check
+            "關閉 GPU 能力檢測", SETTING.no_gpu_ability_check
         )
         no_gpu_ability_check.toggled.connect(
             lambda checked: SETTING.set_value("no_gpu_ability_check", checked)
         )
         no_context_check = UiCheckBox(
-            "关闭每线程上下文长度检查", SETTING.no_context_check
+            "關閉每線程上下文長度檢查", SETTING.no_context_check
         )
         no_context_check.toggled.connect(
             lambda checked: SETTING.set_value("no_context_check", checked)
         )
-        model_sort_combo = UiComboBox(["修改时间", "文件名", "文件大小"])
+        model_sort_combo = UiComboBox(["修改時間", "文件名", "文件大小"])
         model_sort_combo.setCurrentText(SETTING.model_sort_option)
         model_sort_combo.currentTextChanged.connect(
             lambda text: SETTING.set_value("model_sort_option", text)
         )
         
-        llamacpp_path = UiLineEdit("可选，手动指定llama.cpp路径", SETTING.llamacpp_path)
+        llamacpp_path = UiLineEdit("可選，手動指定llama.cpp路徑", SETTING.llamacpp_path)
         llamacpp_path.textChanged.connect(
             lambda text: SETTING.set_value("llamacpp_path", text)
         )
         model_search_paths = TextEdit()
         model_search_paths.setPlaceholderText(
-            "模型搜索路径（每行一个路径，已经默认包含当前目录）"
+            "模型搜索路徑（每行一個路徑，已經預設包含當前目錄）"
         )
         model_search_paths.setPlainText(SETTING.model_search_paths)
         model_search_paths.textChanged.connect(
@@ -238,9 +238,9 @@ class SettingsSection(QFrame):
             remember_advanced_state,
             no_gpu_ability_check,
             no_context_check,
-            UiOptionRow("模型列表排序", model_sort_combo),
-            UiOptionRow("llama.cpp文件夹", llamacpp_path),
-            UiOptionCol("模型搜索路径", model_search_paths),
+            UiOptionRow("模型清單排序", model_sort_combo),
+            UiOptionRow("llama.cpp文件夾", llamacpp_path),
+            UiOptionCol("模型搜索路徑", model_search_paths),
         )
 
     def _create_config_editor_section(self):
@@ -251,7 +251,7 @@ class SettingsSection(QFrame):
             SETTING.set_value("presets", presets)
 
         button_group = UiButtonGroup(
-            UiButton("保存配置预设", FIF.SAVE, save_run_setting, primary=True),
+            UiButton("儲存配置預設", FIF.SAVE, save_run_setting, primary=True),
         )
 
         SETTING.presets_changed.connect(self.config_table.set_config)
@@ -281,7 +281,7 @@ class SettingsSection(QFrame):
             log_display.clear()
 
         button_group = UiButtonGroup(
-            UiButton("清空日志", FIF.DELETE, clear_log),
+            UiButton("清除日誌", FIF.DELETE, clear_log),
         )
 
         return UiCol(
@@ -302,7 +302,7 @@ class SettingsSection(QFrame):
     def check_launcher_update(self):
         def notify_need_update(version: str):
             if self.is_version_newer(version):
-                UiInfoBarWarning(self, f"检测到新版本启动器{version}发布")
+                UiInfoBarWarning(self, f"檢測到新版本啟動器{version}發布")
 
         thread = CheckUpdateThread(self)
         thread.sig_version.connect(notify_need_update)
@@ -313,7 +313,7 @@ class SettingsSection(QFrame):
             if self.is_version_newer(version):
                 self.sig_need_update.emit(version)
             else:
-                UiInfoBarSuccess(self, "启动器版本已是最新")
+                UiInfoBarSuccess(self, "啟動器版本已是最新")
 
         thread = CheckUpdateThread(self)
         thread.sig_version.connect(notify_need_update)

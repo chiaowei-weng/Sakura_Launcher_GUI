@@ -34,7 +34,7 @@ from qfluentwidgets.common.config import qconfig
 
 class CustomStyleSheetManager(StyleSheetManager):
     def addCustomStyle(self, widget: QWidget, customStyle: str):
-        """添加自定义样式到小部件，而不覆盖现有样式"""
+        """添加自定義樣式到小部件，而不覆蓋現有樣式"""
         if widget in self.widgets:
             source = self.widgets[widget]
             if isinstance(source, StyleSheetCompose):
@@ -61,18 +61,18 @@ class CustomStyleSheetManager(StyleSheetManager):
         self.updateWidgetStyleSheet(widget)
 
     def updateWidgetStyleSheet(self, widget: QWidget):
-        """更新特定小部件的样式表"""
+        """更新特定小部件的樣式表"""
         if widget in self.widgets:
             source = self.widgets[widget]
             widget.setStyleSheet(getStyleSheet(source, qconfig.theme))
 
 
-# 创建自定义样式表管理器的实例
+# 創建自定義樣式表管理器的實例
 custom_style_manager = CustomStyleSheetManager()
 
 
 def addCustomWidgetStyle(widget: QWidget, customStyle: str):
-    """添加自定义样式到小部件，而不覆盖现有样式"""
+    """添加自定義樣式到小部件，而不覆蓋現有樣式"""
     custom_style_manager.addCustomStyle(widget, customStyle)
 
 
@@ -81,14 +81,14 @@ def UiCheckBox(text, checked):
     w.setText(text)
     w.setChecked(checked)
 
-    # 注册默认样式
+    # 註冊預設樣式
     custom_style_manager.register(FluentStyleSheet.CHECK_BOX, w)
 
-    # 设置 CheckBox 的大小
-    checkbox_size = 12  # 可以根据需要调整这个值
+    # 設定 CheckBox 的大小
+    checkbox_size = 12  # 可以根據需要調整這個值
     w.setIconSize(QSize(checkbox_size, checkbox_size))
 
-    # 添加自定义样式（在下一个事件循环中应用，以确保覆盖其他样式）
+    # 添加自定義樣式（在下一個事件循環中應用，以確保覆蓋其他樣式）
     QTimer.singleShot(
         0,
         lambda: addCustomWidgetStyle(
@@ -206,7 +206,7 @@ def UiOptionRow(text, content, label_width=None):
 def UiHLine():
     w = QFrame()
     w.setFrameShape(QFrame.HLine)
-    w.setFrameShadow(QFrame.Plain)  # 改为Plain以去除阴影效果
+    w.setFrameShadow(QFrame.Plain)  # 改為Plain以去除陰影效果
     w.setFixedHeight(32)
     w.setStyleSheet(
         """
@@ -214,7 +214,7 @@ def UiHLine():
         margin-top: 15px;
         margin-bottom: 20px;
         max-height: 1px;
-        border: none;  /* 去掉边框 */
+        border: none;  /* 去掉邊框 */
     """
     )
     return w

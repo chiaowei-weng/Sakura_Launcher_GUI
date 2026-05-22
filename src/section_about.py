@@ -30,7 +30,7 @@ class AboutSection(QFrame):
 
         self.text_label = QLabel(self)
         self.text_label.setStyleSheet("font-size: 25px;")
-        self.text_label.setText("测试版本UI，可能有很多bug")
+        self.text_label.setText("測試版本UI，可能有很多bug")
         self.text_label.setAlignment(Qt.AlignCenter)
 
         self.text_label_2 = QLabel(self)
@@ -40,14 +40,14 @@ class AboutSection(QFrame):
 
         self.hyperlinkButton_1 = HyperlinkButton(
             url="https://github.com/SakuraLLM/SakuraLLM",
-            text="SakuraLLM 项目地址",
+            text="SakuraLLM 項目地址",
             parent=self,
             icon=FIF.LINK,
         )
 
         self.hyperlinkButton_2 = HyperlinkButton(
             url="https://github.com/PiDanShouRouZhouXD/Sakura_Launcher_GUI",
-            text="Sakura Launcher GUI 项目地址",
+            text="Sakura Launcher GUI 項目地址",
             parent=self,
             icon=FIF.LINK,
         )
@@ -56,17 +56,17 @@ class AboutSection(QFrame):
         text_group_layout.addWidget(self.text_label_2)
         text_group_layout.addWidget(self.hyperlinkButton_1)
         text_group_layout.addWidget(self.hyperlinkButton_2)
-        text_group_layout.addStretch(1)  # 添加伸缩项
+        text_group_layout.addStretch(1)  # 添加伸縮項
         text_group.setLayout(text_group_layout)
 
         container = QVBoxLayout()
 
         self.setLayout(container)
-        container.setSpacing(28)  # 设置布局内控件的间距为28
+        container.setSpacing(28)  # 設定布局內控制項的間距為28
         container.setContentsMargins(
             50, 70, 50, 30
-        )  # 设置布局的边距, 也就是外边框距离，分别为左、上、右、下
+        )  # 設定布局的邊距, 也就是外邊框距離，分別為左、上、右、下
 
-        container.addStretch(1)  # 添加伸缩项
+        container.addStretch(1)  # 添加伸縮項
         container.addWidget(text_group)
-        container.addStretch(1)  # 添加伸缩项
+        container.addStretch(1)  # 添加伸縮項

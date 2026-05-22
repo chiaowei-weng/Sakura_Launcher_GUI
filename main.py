@@ -54,24 +54,24 @@ class MainWindow(MSFluentWindow):
         )
 
     def init_navigation(self):
-        self.run_server_section = RunServerSection("启动", self)
-        self.dowload_section = DownloadSection("下载")
+        self.run_server_section = RunServerSection("啟動", self)
+        self.dowload_section = DownloadSection("下載")
         self.cf_share_section = CFShareSection("共享", self)
-        self.settings_section = SettingsSection("设置")
-        self.about_section = AboutSection("关于")
+        self.settings_section = SettingsSection("設定")
+        self.about_section = AboutSection("關於")
 
-        self.addSubInterface(self.run_server_section, FIF.COMMAND_PROMPT, "启动")
-        self.addSubInterface(self.dowload_section, FIF.DOWNLOAD, "下载")
+        self.addSubInterface(self.run_server_section, FIF.COMMAND_PROMPT, "啟動")
+        self.addSubInterface(self.dowload_section, FIF.DOWNLOAD, "下載")
         self.addSubInterface(self.cf_share_section, FIF.IOT, "共享")
-        self.addSubInterface(self.settings_section, FIF.SETTING, "设置")
+        self.addSubInterface(self.settings_section, FIF.SETTING, "設定")
         self.addSubInterface(
             self.about_section,
             FIF.INFO,
-            "关于",
+            "關於",
             position=NavigationItemPosition.BOTTOM,
         )
 
-        self.navigationInterface.setCurrentItem("启动")
+        self.navigationInterface.setCurrentItem("啟動")
 
     def init_window(self):
         self.run_server_section.run_button.clicked.connect(self.run_llamacpp_server)
@@ -104,7 +104,7 @@ class MainWindow(MSFluentWindow):
 
         icon = get_resource_path(ICON_FILE)
         self.setWindowIcon(QIcon(icon))
-        self.setWindowTitle(f"Sakura 启动器 {SAKURA_LAUNCHER_GUI_VERSION}")
+        self.setWindowTitle(f"Sakura 啟動器 {SAKURA_LAUNCHER_GUI_VERSION}")
 
         desktop = QApplication.screens()[0].availableGeometry()
         w, h = desktop.width(), desktop.height()
@@ -118,13 +118,15 @@ class MainWindow(MSFluentWindow):
 
     def run_llamacpp_server(self):
         self.refresh_gpus()
+        self.start_proxy()
         self._run_llamacpp("llama-server")
 
     def run_llamacpp_server_and_share(self):
+        self.start_proxy()
         self._run_llamacpp("llama-server")
         cf_share_url = self.cf_share_section.worker_url_input.text()
         if not cf_share_url:
-            MessageBox("错误", "分享链接不能为空", self).exec()
+            MessageBox("錯誤", "分享連結不能為空", self).exec()
             return
         QTimer.singleShot(18000, self.cf_share_section.start_cf_share)
 
@@ -132,7 +134,7 @@ class MainWindow(MSFluentWindow):
         self._run_llamacpp("llama-batched-bench")
 
     def check_gpu_ability(self, selected_gpu_display, model_name, context_length, n_parallel):
-        """检查GPU能力"""
+        """檢查GPU能力"""
         try:
             check_result = self.gpu_manager.check_gpu_ability(
                 selected_gpu_display,
@@ -143,20 +145,20 @@ class MainWindow(MSFluentWindow):
             if not check_result.is_capable and not SETTING.no_gpu_ability_check:
                 if check_result.is_fatal:
                     MessageBox(
-                        "致命错误：GPU 不满足强制需求",
-                        f"显卡 {selected_gpu_display} 无法运行 {model_name}。\n\n"
+                        "致命錯誤：GPU 不滿足強制需求",
+                        f"顯示卡 {selected_gpu_display} 無法執行 {model_name}。\n\n"
                         f"原因：{check_result.reason}\n\n"
-                        f"注：GPU能力检测对话框可以在设置中关闭",
+                        f"註：GPU能力檢測對話框可以在設定中關閉",
                         self,
                     ).exec()
                     return False
                 else:
                     box = MessageBox(
-                        "警告：GPU 不满足运行最低需求",
-                        f"显卡 {selected_gpu_display} 无法运行 {model_name}。\n\n"
+                        "警告：GPU 不滿足執行最低需求",
+                        f"顯示卡 {selected_gpu_display} 無法執行 {model_name}。\n\n"
                         f"原因：{check_result.reason}\n\n"
-                        f"你可以继续使用，但是运行可能发生异常\n\n"
-                        f"注：GPU能力检测对话框可以在设置中关闭",
+                        f"你可以繼續使用，但是執行可能發生異常\n\n"
+                        f"註：GPU能力檢測對話框可以在設定中關閉",
                         self,
                     )
                     is_quit = False
@@ -171,29 +173,29 @@ class MainWindow(MSFluentWindow):
 
                     box.yesSignal.connect(on_yes)
                     box.cancelSignal.connect(on_cancel)
-                    box.yesButton.setText("无视风险继续！")
+                    box.yesButton.setText("無視風險繼續！")
                     box.cancelButton.setText("停止")
                     box.exec()
                     return not is_quit
         except Exception as e:
-            logging.info(f"检查GPU能力时出错: {str(e)}")
-            MessageBox("错误", f"检查GPU能力时出错: {str(e)}", self).exec()
+            logging.info(f"檢查GPU能力時出錯: {str(e)}")
+            MessageBox("錯誤", f"檢查GPU能力時出錯: {str(e)}", self).exec()
             return False
         return True
 
     def check_context_per_thread(self, context_length, n_parallel):
-        """检查每线程上下文长度"""
+        """檢查每執行緒上下文長度"""
         context_per_thread = context_length // n_parallel
         if context_per_thread < 1024 and not SETTING.no_context_check:
             box = MessageBox(
-                "警告：每线程上下文长度过小",
-                f"当前每个线程的上下文长度为 {context_per_thread}，\n"
-                f"小于推荐的最小值 1024。\n\n"
-                f"这可能会导致模型无法正常使用。建议：\n"
-                f"1. 增加总上下文长度\n"
-                f"2. 减少并发数量\n"
-                f"3. 点击「自动配置」按钮进行自动优化，然后继续\n（仅支持「下载」页面中的模型）\n\n"
-                f"注：此警告可以在设置中关闭",
+                "警告：每執行緒上下文長度過小",
+                f"當前每個執行緒的上下文長度為 {context_per_thread}，\n"
+                f"小於推薦的最小值 1024。\n\n"
+                f"這可能會導致模型無法正常使用。建議：\n"
+                f"1. 增加總上下文長度\n"
+                f"2. 減少並發數量\n"
+                f"3. 點擊「自動配置」按鈕進行自動優化，然後繼續\n（僅支援「下載」頁面中的模型）\n\n"
+                f"註：此警告可以在設定中關閉",
                 self,
             )
             is_quit = False
@@ -209,22 +211,22 @@ class MainWindow(MSFluentWindow):
             def on_auto_config():
                 nonlocal is_quit
                 is_quit = True
-                # 调用 RunServerSection 的自动配置功能
+                # 調用 RunServerSection 的自動配置功能
                 self.run_server_section.auto_configure()
 
             box.yesSignal.connect(on_yes)
             box.cancelSignal.connect(on_cancel)
 
-            # 创建自动配置按钮并添加到buttonGroup
+            # 建立自動配置按鈕並添加到buttonGroup
             from qfluentwidgets import PushButton
 
-            auto_config_button = PushButton("自动配置", box)
+            auto_config_button = PushButton("自動配置", box)
             auto_config_button.clicked.connect(on_auto_config)
             box.buttonGroup.layout().insertWidget(
                 1, auto_config_button
-            )  # 插入到yes和cancel按钮之间
+            )  # 插入到yes和cancel按鈕之間
 
-            box.yesButton.setText("继续")
+            box.yesButton.setText("繼續")
             box.cancelButton.setText("停止")
             box.exec()
             return not is_quit
@@ -233,8 +235,8 @@ class MainWindow(MSFluentWindow):
     def check_launch_requirements(
         self, selected_gpu_display, model_name, context_length, n_parallel
     ):
-        """检查启动要求"""
-        # 检查GPU能力
+        """檢查啟動要求"""
+        # 檢查GPU能力
         if not self.check_gpu_ability(
             selected_gpu_display,
             model_name,
@@ -243,7 +245,7 @@ class MainWindow(MSFluentWindow):
         ):
             return False
 
-        # 检查每线程上下文长度
+        # 檢查每執行緒上下文長度
         if not self.check_context_per_thread(context_length, n_parallel):
             return False
 
@@ -259,20 +261,20 @@ class MainWindow(MSFluentWindow):
         exe_extension = ".exe" if sys.platform == "win32" else ""
 
         if not os.path.exists(llamacpp_path):
-            MessageBox("错误", f"llamacpp路径不存在: {llamacpp_path}", self).exec()
+            MessageBox("錯誤", f"llamacpp路徑不存在: {llamacpp_path}", self).exec()
             return
 
         model_name = section.model_path.currentText().split(os.sep)[-1]
         model_path = section.model_path.currentText()
-        logging.info(f"模型路径: {model_path}")
-        logging.info(f"模型名称: {model_name}")
+        logging.info(f"模型路徑: {model_path}")
+        logging.info(f"模型名稱: {model_name}")
 
-        # 将GPU检查提前到这里
-        if section.gpu_combo.currentText() != "自动":
+        # 將GPU檢查提前到這裡
+        if section.gpu_combo.currentText() != "自動":
             selected_gpu_display = section.gpu_combo.currentText()
             selected_index = section.gpu_combo.currentIndex()
 
-            # 检查启动要求
+            # 檢查啟動要求
             if not self.check_launch_requirements(
                 selected_gpu_display,
                 model_name,
@@ -281,13 +283,13 @@ class MainWindow(MSFluentWindow):
             ):
                 return
 
-        # 判断使用哪个可执行文件
+        # 判斷使用哪個執行檔
         executable_path = os.path.join(llamacpp_path, f"{executable}{exe_extension}")
         if not os.path.exists(executable_path):
-            MessageBox("错误", f"可执行文件不存在: {executable_path}", self).exec()
+            MessageBox("錯誤", f"執行檔不存在: {executable_path}", self).exec()
             return
 
-        # 获取llama.cpp版本
+        # 獲取llama.cpp版本
         version = get_llamacpp_version(llamacpp_path)
         logging.info(f"llama.cpp版本: {version}")
 
@@ -311,39 +313,39 @@ class MainWindow(MSFluentWindow):
 
         env = os.environ.copy()
         try:
-            if section.gpu_combo.currentText() != "自动":
+            if section.gpu_combo.currentText() != "自動":
                 self.gpu_manager.set_gpu_env(
                     env,
                     section.gpu_combo.currentText(),
                     section.gpu_combo.currentIndex(),
                 )
         except Exception as e:
-            logging.info(f"设置GPU环境变量时出错: {str(e)}")
-            MessageBox("错误", f"设置GPU环境变量时出错: {str(e)}", self).exec()
+            logging.info(f"設置GPU環境變數時出錯: {str(e)}")
+            MessageBox("錯誤", f"設置GPU環境變數時出錯: {str(e)}", self).exec()
             return
 
         command_plain = " ".join(command)
-        logging.info(f"执行命令: {command_plain}")
+        logging.info(f"執行命令: {command_plain}")
 
-        # 在运行命令的部分
+        # 在執行命令的部分
         if sys.platform == "win32":
             if section.background_check.isChecked():
-                # 后台执行，不显示窗口，并加入 processes 列表以便退出时关闭
+                # 後台執行，不顯示視窗，並加入 processes 列表以便退出時關閉
                 proc = subprocess.Popen(command, env=env, creationflags=subprocess.CREATE_NO_WINDOW)
                 processes.append(proc)
-                logging.info("命令已在后台启动。")
+                logging.info("命令已在後台啟動。")
             else:
                 command_prefix = ["start", "cmd", "/K"]
                 subprocess.Popen(command_prefix + command, env=env, shell=True)
-                logging.info("命令已在新的终端窗口中启动。")
+                logging.info("命令已在新的終端機視窗中啟動。")
         elif sys.platform == "darwin":
             if section.background_check.isChecked():
                 proc = subprocess.Popen(command, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 processes.append(proc)
-                logging.info("命令已在后台启动。")
+                logging.info("命令已在後台啟動。")
             else:
                 cmd_str = " ".join(command)
-                # 使用 osascript 执行命令，要先进入正确目录
+                # 使用 osascript 執行命令，要先進入正確目錄
                 apple_script = [
                     'osascript',
                     '-e',
@@ -352,24 +354,24 @@ class MainWindow(MSFluentWindow):
                     end tell'''
                 ]
                 subprocess.Popen(apple_script, env=env)
-                logging.info("命令已在新的终端窗口中启动。")
+                logging.info("命令已在新的終端機視窗中啟動。")
         else:
             if section.background_check.isChecked():
                 proc = subprocess.Popen(command, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 processes.append(proc)
-                logging.info("命令已在后台启动。")
+                logging.info("命令已在後台啟動。")
             else:
                 terminal = self.find_terminal()
                 if not terminal:
-                    MessageBox("错误", "无法找到合适的终端，请手动运行命令。", self).exec()
-                    logging.info(f"请手动运行以下命令：\n{command_plain}")
+                    MessageBox("錯誤", "無法找到合適的終端機，請手動執行命令。", self).exec()
+                    logging.info(f"請手動執行以下命令：\n{command_plain}")
                     return
                 if terminal == "gnome-terminal":
                     command_prefix = [terminal, "--", "bash", "-c"]
                 else:
                     command_prefix = [terminal, "-e"]
                 subprocess.Popen(command_prefix + command, env=env)
-                logging.info("命令已在新的终端窗口中启动。")
+                logging.info("命令已在新的終端機視窗中啟動。")
 
     def find_terminal(self):
         terminals = [
@@ -403,12 +405,39 @@ class MainWindow(MSFluentWindow):
                 proc.kill()
         processes.clear()
 
+    def start_proxy(self):
+        section = self.run_server_section
+        if not section.proxy_check.isChecked():
+            return
+
+        target_port = section.port_input.text()
+        proxy_port = section.proxy_port_input.text()
+        
+        proxy_script = os.path.join(CURRENT_DIR, "src", "utils", "proxy.py")
+        
+        # 使用 venv 的 python 執行
+        venv_python = os.path.join(CURRENT_DIR, "venv", "Scripts", "python.exe")
+        if not os.path.exists(venv_python):
+            venv_python = "python"
+            
+        command = [venv_python, proxy_script, "--target-port", target_port, "--proxy-port", proxy_port]
+        
+        logging.info(f"啟動繁體轉換代理: {proxy_port} -> {target_port}")
+        
+        # 始終在背景啟動代理
+        if sys.platform == "win32":
+            proc = subprocess.Popen(command, creationflags=subprocess.CREATE_NO_WINDOW)
+        else:
+            proc = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            
+        processes.append(proc)
+
     def refresh_gpus(self):
         self.gpu_manager.detect_gpus()
         self.run_server_section.refresh_gpus(keep_selected=True)
 
         if not self.gpu_manager.nvidia_gpus and not self.gpu_manager.amd_gpus:
-            logging.info("未检测到NVIDIA或AMD GPU")
+            logging.info("未檢測到NVIDIA或AMD GPU")
 
     def save_window_state(self):
         if SETTING.remember_window_state:
@@ -481,26 +510,41 @@ if __name__ == "__main__":
 
         env = os.environ.copy()
         gpu_name = config.get("gpu", "")
-        if gpu_name and gpu_name != "自动":
+        if gpu_name and gpu_name != "自動":
             try:
                 from src.gpu import GPUManager, GPUDisplayHelper
 
                 gm = GPUManager()
-                # 尝试根据名称匹配 GPU 并设置环境变量
-                # 这里简单处理：如果名称中包含索引，则提取索引
+                # 嘗試根據名稱匹配 GPU 並設置環境變數
+                # 這裡簡單處理：如果名稱中包含索引，則提取索引
                 _, gpu_index = GPUDisplayHelper.parse_display_name(gpu_name)
                 if gpu_index is not None:
                     gm.set_gpu_env(env, gpu_name, gpu_index)
                 else:
-                    # 如果没有索引，尝试查找
+                    # 如果沒有索引，嘗試查找
                     gpu_key = GPUDisplayHelper.find_gpu_key(gpu_name, gm.gpu_info_map)
                     if gpu_key:
-                        # 查找该 key 在列表中的大致索引（这部分逻辑在 GUI 中比较复杂，CLI 盡力而為）
+                        # 查找該 key 在列表中的大致索引（這部分邏輯在 GUI 中比較複雜，CLI 盡力而為）
                         pass
             except Exception as e:
                 print(f"Warning: Failed to set GPU environment: {e}")
 
         print(f"Executing: {' '.join(command)}")
+
+        # 啟動代理伺服器 (如果啟用)
+        if config.get("use_proxy", False):
+            target_port = config.get("port", "8080")
+            proxy_port = config.get("proxy_port", "8081")
+            proxy_script = os.path.join(CURRENT_DIR, "src", "utils", "proxy.py")
+            
+            print(f"Starting Traditional Chinese Proxy: {proxy_port} -> {target_port}")
+            proxy_cmd = [sys.executable, proxy_script, "--target-port", str(target_port), "--proxy-port", str(proxy_port)]
+            
+            if sys.platform == "win32":
+                subprocess.Popen(proxy_cmd, creationflags=subprocess.CREATE_NO_WINDOW)
+            else:
+                subprocess.Popen(proxy_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
         if sys.platform == "win32":
             subprocess.Popen(
                 command, env=env, creationflags=subprocess.CREATE_NO_WINDOW
@@ -517,20 +561,20 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     better_font = QFont()
 
-    # 获取主屏幕的缩放比例和原始分辨率
+    # 獲取主螢幕的縮放比例和原始解析度
     screen = app.primaryScreen()
     screen_geometry = screen.geometry()
     device_pixel_ratio = screen.devicePixelRatio()
-    print(f"设备像素比: {device_pixel_ratio}")
+    print(f"設備像素比: {device_pixel_ratio}")
 
-    # 计算原始分辨率
+    # 計算原始解析度
     original_width = screen_geometry.width() * device_pixel_ratio
     original_height = screen_geometry.height() * device_pixel_ratio
-    print(f"原始屏幕分辨率: {original_width}x{original_height}")
+    print(f"原始螢幕解析度: {original_width}x{original_height}")
 
-    # 如果原始分辨率大于1920x1080，关闭hinting
+    # 如果原始解析度大於1920x1080，關閉hinting
     if original_width > 1920 and original_height > 1080:
-        print("原始屏幕分辨率大于1920x1080，关闭hinting")
+        print("原始螢幕解析度大於1920x1080，關閉hinting")
         better_font.setHintingPreference(QFont.PreferNoHinting)
 
     app.setFont(better_font)
