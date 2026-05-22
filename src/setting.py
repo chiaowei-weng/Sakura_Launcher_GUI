@@ -18,6 +18,7 @@ class Setting(QObject):
     no_context_check = False
     token = ""
     port_override = ""
+    run_in_background = False
 
     # 各个属性的专用信号
     llamacpp_path_changed = Signal(str)
@@ -31,6 +32,7 @@ class Setting(QObject):
     no_context_check_changed = Signal(bool)
     token_changed = Signal(str)
     port_override_changed = Signal(str)
+    run_in_background_changed = Signal(bool)
 
     # 通用的值变化信号
     value_changed = Signal(str, object)  # (key, value)
@@ -51,6 +53,7 @@ class Setting(QObject):
             self.no_context_check_changed,
             self.token_changed,
             self.port_override_changed,
+            self.run_in_background_changed,
         ]:
             sig.connect(lambda: self.save_settings())
 

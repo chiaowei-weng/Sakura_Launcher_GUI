@@ -26,6 +26,7 @@ from src.section_about import AboutSection
 from src.section_settings import SettingsSection
 from src.setting import *
 from src.ui import *
+from src.utils.launcher import build_llamacpp_command
 
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO").upper())
 
@@ -290,65 +291,23 @@ class MainWindow(MSFluentWindow):
         version = get_llamacpp_version(llamacpp_path)
         logging.info(f"llama.cpp版本: {version}")
 
-        option_model = ["--model", model_path]
-        option_extra = []
+        # 構建配置字典
+        config = {
+            "model_path": model_path,
+            "context_length": section.context_length_input.value(),
+            "gpu_layers": section.gpu_layers_spinbox.value(),
+            "host": section.host_input.text(),
+            "port": section.port_input.text(),
+            "n_parallel": section.n_parallel_spinbox.value(),
+            "npp": section.npp_input.text(),
+            "ntg": section.ntg_input.text(),
+            "npl": section.npl_input.text(),
+            "flash_attention": section.flash_attention_check.isChecked(),
+            "no_mmap": section.no_mmap_check.isChecked(),
+            "command_template": section.command_template.toPlainText().strip(),
+        }
 
-        option_extra += [
-            "-c",
-            str(section.context_length_input.value()),
-            "-ngl",
-            str(section.gpu_layers_spinbox.value()),
-        ]
-
-        if executable == "llama-server":
-            option_extra += [
-                "-a",
-                model_name,
-                "--host",
-                section.host_input.text(),
-                "--port",
-                section.port_input.text(),
-                "-np",
-                str(section.n_parallel_spinbox.value()),
-            ]
-            option_extra.append("--metrics")
-
-            # 根据版本添加--slots参数
-            if version is not None and version >= 3898:
-                logging.info("版本大于等于3898，添加--slots参数")
-                option_extra.append("--slots")
-        elif executable == "llama-batched-bench":
-            option_extra += [
-                "-npp",
-                section.npp_input.text(),
-                "-ntg",
-                section.ntg_input.text(),
-                "-npl",
-                section.npl_input.text(),
-            ]
-
-        if section.flash_attention_check.isChecked():
-            option_extra.append("-fa")
-            if version >= 6325:     # https://github.com/ggml-org/llama.cpp/releases/tag/b6325
-                option_extra.append("on")
-        if section.no_mmap_check.isChecked():
-            option_extra.append("--no-mmap")
-
-        command = []
-        command_template: str = section.command_template.toPlainText().strip()
-        if not command_template:
-            command_template = "%cmd%"
-        for command_part in command_template.split(" "):
-            command_part = command_part.strip()
-            if command_part == "%cmd%":
-                command.append(executable_path)
-                command += option_model
-                command += option_extra
-            elif command_part == "%cmd_raw%":
-                command.append(executable_path)
-                command += option_model
-            elif command_part:
-                command.append(command_part)
+        command = build_llamacpp_command(config, executable_path, version)
 
         env = os.environ.copy()
         try:
@@ -368,32 +327,49 @@ class MainWindow(MSFluentWindow):
 
         # 在运行命令的部分
         if sys.platform == "win32":
-            command_prefix = ["start", "cmd", "/K"]
-            subprocess.Popen(command_prefix + command, env=env, shell=True)
-        elif sys.platform == "darwin":
-            cmd_str = " ".join(command)
-            # 使用 osascript 执行命令，要先进入正确目录
-            apple_script = [
-                'osascript',
-                '-e',
-                f'''tell application "Terminal"
-                    do script "cd {CURRENT_DIR} && {cmd_str}"
-                end tell'''
-            ]
-            subprocess.Popen(apple_script, env=env)
-        else:
-            terminal = self.find_terminal()
-            if not terminal:
-                MessageBox("错误", "无法找到合适的终端，请手动运行命令。", self).exec()
-                logging.info(f"请手动运行以下命令：\n{command_plain}")
-                return
-            if terminal == "gnome-terminal":
-                command_prefix = [terminal, "--", "bash", "-c"]
+            if section.background_check.isChecked():
+                # 后台执行，不显示窗口，并加入 processes 列表以便退出时关闭
+                proc = subprocess.Popen(command, env=env, creationflags=subprocess.CREATE_NO_WINDOW)
+                processes.append(proc)
+                logging.info("命令已在后台启动。")
             else:
-                command_prefix = [terminal, "-e"]
-            subprocess.Popen(command_prefix + command, env=env)
-
-        logging.info("命令已在新的终端窗口中启动。")
+                command_prefix = ["start", "cmd", "/K"]
+                subprocess.Popen(command_prefix + command, env=env, shell=True)
+                logging.info("命令已在新的终端窗口中启动。")
+        elif sys.platform == "darwin":
+            if section.background_check.isChecked():
+                proc = subprocess.Popen(command, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                processes.append(proc)
+                logging.info("命令已在后台启动。")
+            else:
+                cmd_str = " ".join(command)
+                # 使用 osascript 执行命令，要先进入正确目录
+                apple_script = [
+                    'osascript',
+                    '-e',
+                    f'''tell application "Terminal"
+                        do script "cd {CURRENT_DIR} && {cmd_str}"
+                    end tell'''
+                ]
+                subprocess.Popen(apple_script, env=env)
+                logging.info("命令已在新的终端窗口中启动。")
+        else:
+            if section.background_check.isChecked():
+                proc = subprocess.Popen(command, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                processes.append(proc)
+                logging.info("命令已在后台启动。")
+            else:
+                terminal = self.find_terminal()
+                if not terminal:
+                    MessageBox("错误", "无法找到合适的终端，请手动运行命令。", self).exec()
+                    logging.info(f"请手动运行以下命令：\n{command_plain}")
+                    return
+                if terminal == "gnome-terminal":
+                    command_prefix = [terminal, "--", "bash", "-c"]
+                else:
+                    command_prefix = [terminal, "-e"]
+                subprocess.Popen(command_prefix + command, env=env)
+                logging.info("命令已在新的终端窗口中启动。")
 
     def find_terminal(self):
         terminals = [
@@ -457,6 +433,85 @@ class MainWindow(MSFluentWindow):
 
 
 if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Sakura Launcher GUI")
+    parser.add_argument(
+        "--run-preset", type=str, help="Run a specific preset in background and exit"
+    )
+    parser.add_argument(
+        "--list-presets", action="store_true", help="List all available presets"
+    )
+    args, unknown = parser.parse_known_args()
+
+    if args.list_presets:
+        if not SETTING.presets:
+            print("No presets found.")
+        else:
+            print("Available presets:")
+            for p in SETTING.presets:
+                print(f"  - {p['name']}")
+        sys.exit(0)
+
+    if args.run_preset:
+        preset = next((p for p in SETTING.presets if p["name"] == args.run_preset), None)
+        if not preset:
+            print(f"Error: Preset '{args.run_preset}' not found.")
+            sys.exit(1)
+
+        config = preset["config"]
+        llamacpp_path = (
+            config.get("llamacpp_override")
+            or SETTING.llamacpp_path
+            or os.path.join(CURRENT_DIR, "llama")
+        )
+        if not os.path.exists(llamacpp_path):
+            print(f"Error: llamacpp path not found: {llamacpp_path}")
+            sys.exit(1)
+
+        version = get_llamacpp_version(llamacpp_path)
+        exe_ext = ".exe" if sys.platform == "win32" else ""
+        executable_path = os.path.join(llamacpp_path, f"llama-server{exe_ext}")
+
+        if not os.path.exists(executable_path):
+            print(f"Error: Executable not found: {executable_path}")
+            sys.exit(1)
+
+        command = build_llamacpp_command(config, executable_path, version)
+
+        env = os.environ.copy()
+        gpu_name = config.get("gpu", "")
+        if gpu_name and gpu_name != "自动":
+            try:
+                from src.gpu import GPUManager, GPUDisplayHelper
+
+                gm = GPUManager()
+                # 尝试根据名称匹配 GPU 并设置环境变量
+                # 这里简单处理：如果名称中包含索引，则提取索引
+                _, gpu_index = GPUDisplayHelper.parse_display_name(gpu_name)
+                if gpu_index is not None:
+                    gm.set_gpu_env(env, gpu_name, gpu_index)
+                else:
+                    # 如果没有索引，尝试查找
+                    gpu_key = GPUDisplayHelper.find_gpu_key(gpu_name, gm.gpu_info_map)
+                    if gpu_key:
+                        # 查找该 key 在列表中的大致索引（这部分逻辑在 GUI 中比较复杂，CLI 盡力而為）
+                        pass
+            except Exception as e:
+                print(f"Warning: Failed to set GPU environment: {e}")
+
+        print(f"Executing: {' '.join(command)}")
+        if sys.platform == "win32":
+            subprocess.Popen(
+                command, env=env, creationflags=subprocess.CREATE_NO_WINDOW
+            )
+        else:
+            subprocess.Popen(
+                command, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            )
+        print("Success: Server started in background.")
+        sys.exit(0)
+
     setTheme(Theme.DARK)
     setThemeColor(QColor(222, 142, 204))
     app = QApplication(sys.argv)

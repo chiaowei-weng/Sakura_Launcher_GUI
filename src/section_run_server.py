@@ -397,6 +397,7 @@ class RunServerSection(QFrame):
                 "gpu_layers": self.gpu_layers_spinbox.value(),
                 "flash_attention": self.flash_attention_check.isChecked(),
                 "no_mmap": self.no_mmap_check.isChecked(),
+                "run_in_background": self.background_check.isChecked(),
                 "gpu": selected_gpu,  # 保存完整的GPU显示名称
                 "model_path": self.model_path.currentText(),
                 "context_length": self.context_length_input.value(),

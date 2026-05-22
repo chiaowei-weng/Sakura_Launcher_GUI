@@ -93,6 +93,19 @@ src/:
 └── __init__.py
 ```
 
+### **命令行與管理腳本**
+
+專案提供了便捷的命令行介面與管理腳本，方便在不開啟 GUI 的情況下啟動服務。
+
+#### **管理腳本 (推薦)**
+- **PowerShell (`sakura.ps1`)**: `.\sakura.ps1 start [preset]` (預設啟動 default 配置)
+- **批次檔 (`manage.bat`)**: `manage.bat start [preset]`
+
+#### **CLI 參數**
+您可以直接透過 `main.py` 調用以下參數：
+- `--list-presets`: 列出所有已保存的配置預設名稱。
+- `--run-preset [名稱]`: 根據指定預設背景啟動 `llama-server` 並立即退出啟動器。
+
 ### **打包**
 
 ```sh
